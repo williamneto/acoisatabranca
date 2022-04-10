@@ -1,0 +1,59 @@
+version: '3.7'
+services:
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.7.0
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      discovery.type: "single-node"
+      ES_JAVA_OPTS: "-Xms2g -Xmx2g"
+      xpack.monitoring.enabled: "true"
+    volumes:
+      - ./esdata:/usr/share/elasticsearch/data
+      
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.7.0
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+  
+  mongo:
+    image: mongo:4.0
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data
+    command: mongod 
+    ports:
+      - 27017:27017
+
+  backend:
+    environment:
+      - ENV=development
+      - HOST=0.0.0.0
+      - PORT=8000
+      - MONGO_URI=mongodb://mongo:27017/
+      - MONGO_DB_NAME=aane
+      - PUBLIC_URL=http://localhost:8000
+      - WEBHOOK_SECRET=key
+      - ACCESS_TOKEN_EXPIRES=30
+      - REFRESH_TOKEN_EXPIRES=360
+      - AUTH_SECRET_TOKEN=barhtah55$tHTf4%&hytyjed6jdy
+      - JWT_ALGORITHM=HS256
+      - ES_URL=http://elasticsearch:9200
+      - SKIP_INSTALL=False
+      - UFS_INSTALL=RJ
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes: ["./backend/:/app", "./sources/2020/:/app/sources"]
+
+volumes:
+  mongo-data:
+  sources:
+  esdata:
+    driver: local
