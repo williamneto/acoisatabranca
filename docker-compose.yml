@@ -46,7 +46,7 @@ services:
       - JWT_ALGORITHM=HS256
       - ES_URL=http://elasticsearch:9200
       - SKIP_INSTALL=True
-      - SKIP_ANALIZE=FALSE
+      - SKIP_ANALIZE=True
       - UFS_INSTALL=RJ
       - CTS_INSTALL=DUQUE DE CAXIAS
     build: ./backend
