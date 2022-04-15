@@ -56,7 +56,15 @@ const LandingPageHeader = ( props ) => {
         url = `${API}/cidade/?cidade=${cidadePesquisa}`
       }
       axios.get(url).then( response => {
-        console.log(response)
+        props.setData(
+          {
+            "cidade": cidadePesquisa,
+            "partido": partidoPesquisa,
+            "data": response.data
+          }
+        )
+
+        window.scrollTo(0, document.body.scrollHeight)
       })
     } else {
       alert("Digite uma cidade para pesquisa")

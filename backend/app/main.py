@@ -119,8 +119,8 @@ async def get_cidade_data(cidade: str, partido : str = None):
         "all_cands_eleitos": len(all_cands_eleitos),
         "cands_prets": len(cands_prets),
         "cands_prets_eleitos": len(cands_prets_eleitos),
-        "percent_cands_prets": percent_cands_prets,
-        "percent_eleitos_prets": percent_eleitos_prets
+        "percent_cands_prets": "%s %%" % str(round(percent_cands_prets, 2)),
+        "percent_eleitos_prets": "%s %%" % str(round(percent_eleitos_prets, 2))
     }
 
 @app.get(
