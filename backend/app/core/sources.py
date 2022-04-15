@@ -79,13 +79,14 @@ def install_sources():
             receitas_index_count = 0
 
         source_files = []
-        for uf in ufs_to_install:
-            source_files.append(
-                {
-                    "cands": "sources/candidaturas/consulta_cand_2020_%s.csv" % uf,
-                    "receitas": "sources/prestacao_candidaturas/receitas_candidatos_2020_%s.csv" % uf
-                }
-            )
+        if ufs_to_install > 0:
+            for uf in ufs_to_install:
+                source_files.append(
+                    {
+                        "cands": "sources/candidaturas/consulta_cand_2020_%s.csv" % uf,
+                        "receitas": "sources/prestacao_candidaturas/receitas_candidatos_2020_%s.csv" % uf
+                    }
+                )
         
         def get_source_dict(filepath):
             source_dicts = []
@@ -134,58 +135,96 @@ def install_sources():
                 )
             
 def analize_sources():
-    logger.info("aa")
     es = get_es(
         settings.ES_URL, "", ""
     )
     cidades = settings.CTS_INSTALL.split(",")
-    logger.info(cidades)
-    for cidade in cidades:
-        def analisa_receitas(cand):
-            logger.info(">> Analizando receitas candidato %s" % cand["NM_URNA_CANDIDATO"])
-            body={'query': {'term': {'SQ_CANDIDATO.keyword': cand["SQ_CANDIDATO"]}}}
+    
+    def save_cidade_partido(cand):
+        send_to_elastic(
+            {
+                "id": "%s_%s" % (cand["NM_UE"], cand["SG_UF"]),
+                "SG_UF": cand["SG_UF"],
+                "NM_UE": cand["NM_UE"]
+            },
+            "ues_mapping",
+            settings.ES_URL, "", ""
+        )
 
-            receita_total = 0.0
-            receita_partido = 0.0
-            for receitas in es_scroll(es, "2020_receitas", body, "2m", 20):
-                for receita in receitas:
-                    receita_total += float(receita["_source"]["VR_RECEITA"].replace(",","."))
-                    if receita["_source"]["DS_ORIGEM_RECEITA"] == "Recursos de partido político":
-                        receita_partido += float(receita["_source"]["VR_RECEITA"].replace(",","."))
-
-            if receita_partido == 0:
-                partido_percent = 0
-            else:
-                quociente = receita_partido / receita_total
-                partido_percent = quociente * 100
-
-            analise_obj = {
-                "id": cand["SQ_CANDIDATO"],
-                "SQ_CANDIDATO": cand["SQ_CANDIDATO"],
-                "NM_URNA_CANDIDATO": cand["NM_URNA_CANDIDATO"],
-                "DS_CARGO": cand["DS_CARGO"],
-                "DS_COMPOSICAO_COLIGACAO": cand["DS_COMPOSICAO_COLIGACAO"],
-                "DS_DETALHE_SITUACAO_CAND": cand["DS_DETALHE_SITUACAO_CAND"],
-                "NM_UE": cand["NM_UE"],
+        send_to_elastic(
+            {
+                "id": cand["SG_PARTIDO"],
                 "SG_PARTIDO": cand["SG_PARTIDO"],
-                "DS_COR_RACA": cand["DS_COR_RACA"],
-                "DS_GENERO": cand["DS_GENERO"],
-                "DS_SIT_TOT_TURNO": cand["DS_SIT_TOT_TURNO"],
-                "DS_GRAU_INSTRUCAO": cand["DS_GRAU_INSTRUCAO"],
-                "DS_OCUPACAO": cand["DS_OCUPACAO"],
-                "RECEITA_TOTAL": receita_total,
-                "RECEITA_PARTIDO": receita_partido,
-                "PERCENT_RECEITA_PARTIDO": partido_percent
+                "NM_PARTIDO": cand["NM_PARTIDO"],
+                "NR_PARTIDO": cand["NR_PARTIDO"]
+            },
+            "partidos_mapping",
+            settings.ES_URL, "", ""
+        )
+
+    def analisa_receitas(cand):
+        logger.info(">> Analizando receitas candidato %s" % cand["NM_URNA_CANDIDATO"])
+        body={'query': {'term': {'SQ_CANDIDATO.keyword': cand["SQ_CANDIDATO"]}}}
+
+        receita_total = 0.0
+        receita_partido = 0.0
+        for receitas in es_scroll(es, "2020_receitas", body, "2m", 20):
+            for receita in receitas:
+                receita_total += float(receita["_source"]["VR_RECEITA"].replace(",","."))
+                if receita["_source"]["DS_ORIGEM_RECEITA"] == "Recursos de partido político":
+                    receita_partido += float(receita["_source"]["VR_RECEITA"].replace(",","."))
+
+        if receita_partido == 0:
+            partido_percent = 0
+        else:
+            quociente = receita_partido / receita_total
+            partido_percent = quociente * 100
+
+        analise_obj = {
+            "id": cand["SQ_CANDIDATO"],
+            "SQ_CANDIDATO": cand["SQ_CANDIDATO"],
+            "NM_URNA_CANDIDATO": cand["NM_URNA_CANDIDATO"],
+            "DS_CARGO": cand["DS_CARGO"],
+            "DS_COMPOSICAO_COLIGACAO": cand["DS_COMPOSICAO_COLIGACAO"],
+            "DS_DETALHE_SITUACAO_CAND": cand["DS_DETALHE_SITUACAO_CAND"],
+            "NM_UE": cand["NM_UE"],
+            "SG_PARTIDO": cand["SG_PARTIDO"],
+            "DS_COR_RACA": cand["DS_COR_RACA"],
+            "DS_GENERO": cand["DS_GENERO"],
+            "DS_SIT_TOT_TURNO": cand["DS_SIT_TOT_TURNO"],
+            "DS_GRAU_INSTRUCAO": cand["DS_GRAU_INSTRUCAO"],
+            "DS_OCUPACAO": cand["DS_OCUPACAO"],
+            "RECEITA_TOTAL": receita_total,
+            "RECEITA_PARTIDO": receita_partido,
+            "PERCENT_RECEITA_PARTIDO": partido_percent
+        }
+        send_to_elastic(
+            analise_obj,
+            "2020_analise",
+            settings.ES_URL,
+            "", ""
+        )
+
+        save_cidade_partido(cand)
+        time.sleep(0.2)
+    
+    if len(cidades) > 0:
+        for cidade in cidades:
+            body={'query': {'term': {'NM_UE.keyword': cidade}}}
+            cidade_cands = []
+            for cands in es_scroll(es, "2020_cands", body, '2m', 20):
+                for cand in cands:
+                    cidade_cands.append(cand["_source"])
+
+            for cand in cidade_cands:  
+                analisa_receitas(cand)
+                time.sleep(0.2)
+    else:
+        body = {
+            "query": {
+                "match_all": {}
             }
-            send_to_elastic(
-                analise_obj,
-                "2020_analise",
-                settings.ES_URL,
-                "", ""
-            )
-            time.sleep(0.2)
-        
-        body={'query': {'term': {'NM_UE.keyword': cidade}}}
+        }
         cidade_cands = []
         for cands in es_scroll(es, "2020_cands", body, '2m', 20):
             for cand in cands:

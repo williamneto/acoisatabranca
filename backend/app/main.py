@@ -123,6 +123,52 @@ async def get_cidade_data(cidade: str, partido : str = None):
         "percent_eleitos_prets": percent_eleitos_prets
     }
 
+@app.get(
+    "/cidades/"
+)
+async def get_avaliable_cidades():
+    es = get_es(
+        settings.ES_URL, "", ""
+    )
+    body = {
+        "query": {
+            "match_all": {}
+        }
+    }
+
+    
+
+    cidades = []
+    for cidade_hits in es_scroll(es, "ues_mapping", body, "2m", 40):
+        for cidade in cidade_hits:
+            cidades.append(
+                cidade["_source"]
+            )
+    
+    return cidades
+
+@app.get(
+    "/partidos/"
+)
+async def get_avaliable_partidos():
+    es = get_es(
+        settings.ES_URL, "", ""
+    )
+    body = {
+        "query": {
+            "match_all": {}
+        }
+    }   
+
+    partidos = []
+    for partido_hits in es_scroll(es, "partidos_mapping", body, "2m", 40):
+        for partido in partido_hits:
+            partidos.append(
+                partido["_source"]
+            )
+    
+    return partidos
+
 @AuthJWT.load_config
 def get_config():
     return settings
