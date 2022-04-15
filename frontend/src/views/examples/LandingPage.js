@@ -50,7 +50,7 @@ function LandingPage() {
   });
   return (
     <>
-      <ExamplesNavbar />
+      
       <LandingPageHeader />
       <div className="main">
         <div className="section text-center">

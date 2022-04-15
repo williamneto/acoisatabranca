@@ -17,13 +17,19 @@
 
 */
 import React from "react";
+import axios from "axios";
+import { useState } from "react";
 
 // reactstrap components
-import { Button, Container } from "reactstrap";
+import { Button, Container, Input, FormGroup } from "reactstrap";
 
 // core components
+const API = "http://localhost:8000"
 
-function LandingPageHeader() {
+const LandingPageHeader = ( props ) => {
+  const [cidadePesquisa, setCidadePesquisa] = useState();
+  const [partidoPesquisa, setPartidoPesquisa] = useState();
+
   let pageHeader = React.createRef();
 
   React.useEffect(() => {
@@ -40,12 +46,28 @@ function LandingPageHeader() {
     }
   });
 
+  const pesquisa = () => {
+    
+    if (cidadePesquisa) {
+      let url
+      if (partidoPesquisa) {
+        url = `${API}/cidade/?cidade=${cidadePesquisa}&partido=${partidoPesquisa}`
+      } else {
+        url = `${API}/cidade/?cidade=${cidadePesquisa}`
+      }
+      axios.get(url).then( response => {
+        console.log(response)
+      })
+    } else {
+      alert("Digite uma cidade para pesquisa")
+    }
+  }
   return (
     <>
       <div
         style={{
           backgroundImage:
-            "url(" + require("assets/img/daniel-olahh.jpg").default + ")",
+            "url(" + require("assets/img/mnu.png").default + ")",
         }}
         className="page-header"
         data-parallax={true}
@@ -54,21 +76,36 @@ function LandingPageHeader() {
         <div className="filter" />
         <Container>
           <div className="motto text-center">
-            <h1>Example page</h1>
-            <h3>Start designing your landing page here.</h3>
+            <h1>A Coisa Tá Branca</h1>
+            <h3>Monitor da representatividade negra na política</h3>
             <br />
-            <Button
-              href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-              className="btn-round mr-1"
-              color="neutral"
-              target="_blank"
+
+            <FormGroup>
+              <Input 
+                type="text" 
+                name="cidade" 
+                id="cidadePesquisa" 
+                placeholder="Cidade"
+                value={cidadePesquisa}
+                onChange={ e => setCidadePesquisa(e.target.value)}
+              />
+              <Input 
+                type="text" 
+                name="partido" 
+                id="partidoPesquisa" 
+                placeholder="Partido (opcional)"
+                value={partidoPesquisa}
+                onChange={ e => setPartidoPesquisa(e.target.value)}
+              />
+            </FormGroup>
+            <Button 
+              className="btn-round" 
+              color="neutral" 
+              type="button" 
+              onClick={ () => pesquisa()}
               outline
             >
-              <i className="fa fa-play" />
-              Watch video
-            </Button>
-            <Button className="btn-round" color="neutral" type="button" outline>
-              Download
+              Pesquisar
             </Button>
           </div>
         </Container>
