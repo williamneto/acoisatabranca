@@ -14,7 +14,9 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str
     ES_URL: str
     SKIP_INSTALL: bool
+    SKIP_ANALIZE: bool
     UFS_INSTALL: str
+    CTS_INSTALL: str
 
     class Config:
         env_file = ".env"

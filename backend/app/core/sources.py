@@ -1,10 +1,8 @@
 from loguru import logger
 
-import csv, requests, os
+import csv, requests, os, time
 
 from elasticsearch import Elasticsearch
-from elasticsearch import RequestsHttpConnection
-from elasticsearch.connection import create_ssl_context
 from elasticsearch.exceptions import NotFoundError
 from app.core.config import settings
 
@@ -16,21 +14,7 @@ MAX_RETRIES = int(os.getenv('MAX_RETRIES',2))
 MINIO_TIMEOUT= int(os.getenv('MINIO_TIMEOUT',30))
 
 def get_es(es_url, es_user, es_pass):
-        import ssl
-        from elasticsearch.connection import create_ssl_context
-        ssl_context = create_ssl_context()
-        ssl_context.check_hostname = False
-        ssl_context.verify_mode = ssl.CERT_NONE
-        es = Elasticsearch([es_url], 
-                            connection_class=RequestsHttpConnection, 
-                            http_auth=(es_user, es_pass),
-                            timeout=60, 
-                            max_retries=10, 
-                            maxsize=2, 
-                            retry_on_timeout=True,
-                            verify_certs=False,
-                            ssl_context=ssl_context,
-                            use_ssl=False)
+        es = Elasticsearch(es_url, basic_auth=(es_user, es_pass) )
         
         return es
 
@@ -54,6 +38,16 @@ def send_to_elastic(data, es_index, es_url, es_user, es_pass):
         logger.error('ELASTIC UPSERT ERROR==============')
         logger.error('==================================')
         logger.error(e)
+
+def es_scroll(es, index, body, scroll, size, **kw):
+    page = es.search(index=index, body=body, scroll=scroll, size=size, **kw)
+    scroll_id = page['_scroll_id']
+    hits = page['hits']['hits']
+    while len(hits):
+        yield hits
+        page = es.scroll(scroll_id=scroll_id, scroll=scroll)
+        scroll_id = page['_scroll_id']
+        hits = page['hits']['hits']    
 
 def install_sources():
     skip_install = settings.SKIP_INSTALL 
@@ -118,24 +112,85 @@ def install_sources():
             cands_source_dict = get_source_dict(src["cands"])
             logger.info(">>> Carregando recurso: %s" % src["cands"])
             for item in cands_source_dict:
-                if cands_source_dict.index(item) > cands_index_count:
-                    item["id"] = item["SQ_CANDIDATO"]
-                    send_to_elastic(
-                        item,
-                        "2020_cands",
-                        settings.ES_URL,
-                        "", ""
-                    )
+                # if cands_source_dict.index(item) > cands_index_count:
+                item["id"] = item["SQ_CANDIDATO"]
+                send_to_elastic(
+                    item,
+                    "2020_cands",
+                    settings.ES_URL,
+                    "", ""
+                )
 
             receitas_source_dict = get_source_dict(src["receitas"])
             logger.info(">>> Carregando recurso: %s" % src["receitas"])
             for item in receitas_source_dict:
-                if receitas_source_dict.index(item) > receitas_index_count:
-                    item["id"] = item["NR_RECIBO_DOACAO"]
-                    send_to_elastic(
-                        item,
-                        "2020_receitas",
-                        settings.ES_URL,
-                        "", ""
-                    )
+                # if receitas_source_dict.index(item) > receitas_index_count:
+                item["id"] = "%s_%s" % (item["SQ_RECEITA"], item["DT_RECEITA"])
+                send_to_elastic(
+                    item,
+                    "2020_receitas",
+                    settings.ES_URL,
+                    "", ""
+                )
             
+def analize_sources():
+    logger.info("aa")
+    es = get_es(
+        settings.ES_URL, "", ""
+    )
+    cidades = settings.CTS_INSTALL.split(",")
+    logger.info(cidades)
+    for cidade in cidades:
+        def analisa_receitas(cand):
+            logger.info(">> Analizando receitas candidato %s" % cand["NM_URNA_CANDIDATO"])
+            body={'query': {'term': {'SQ_CANDIDATO.keyword': cand["SQ_CANDIDATO"]}}}
+
+            receita_total = 0.0
+            receita_partido = 0.0
+            for receitas in es_scroll(es, "2020_receitas", body, "2m", 20):
+                for receita in receitas:
+                    receita_total += float(receita["_source"]["VR_RECEITA"].replace(",","."))
+                    if receita["_source"]["DS_ORIGEM_RECEITA"] == "Recursos de partido político":
+                        receita_partido += float(receita["_source"]["VR_RECEITA"].replace(",","."))
+
+            if receita_partido == 0:
+                partido_percent = 0
+            else:
+                quociente = receita_partido / receita_total
+                partido_percent = quociente * 100
+
+            analise_obj = {
+                "id": cand["SQ_CANDIDATO"],
+                "SQ_CANDIDATO": cand["SQ_CANDIDATO"],
+                "NM_URNA_CANDIDATO": cand["NM_URNA_CANDIDATO"],
+                "DS_CARGO": cand["DS_CARGO"],
+                "DS_COMPOSICAO_COLIGACAO": cand["DS_COMPOSICAO_COLIGACAO"],
+                "DS_DETALHE_SITUACAO_CAND": cand["DS_DETALHE_SITUACAO_CAND"],
+                "NM_UE": cand["NM_UE"],
+                "SG_PARTIDO": cand["SG_PARTIDO"],
+                "DS_COR_RACA": cand["DS_COR_RACA"],
+                "DS_GENERO": cand["DS_GENERO"],
+                "DS_SIT_TOT_TURNO": cand["DS_SIT_TOT_TURNO"],
+                "DS_GRAU_INSTRUCAO": cand["DS_GRAU_INSTRUCAO"],
+                "DS_OCUPACAO": cand["DS_OCUPACAO"],
+                "RECEITA_TOTAL": receita_total,
+                "RECEITA_PARTIDO": receita_partido,
+                "PERCENT_RECEITA_PARTIDO": partido_percent
+            }
+            send_to_elastic(
+                analise_obj,
+                "2020_analise",
+                settings.ES_URL,
+                "", ""
+            )
+            time.sleep(0.2)
+        
+        body={'query': {'term': {'NM_UE.keyword': cidade}}}
+        cidade_cands = []
+        for cands in es_scroll(es, "2020_cands", body, '2m', 20):
+            for cand in cands:
+                cidade_cands.append(cand["_source"])
+
+        for cand in cidade_cands:  
+            analisa_receitas(cand)
+            time.sleep(0.2)
