@@ -7,7 +7,7 @@ from loguru import logger
 
 from app.core.config import settings
 from app.database.mongodb import connect_db,close_db
-from app.core.sources import es_scroll, install_sources, get_es, analize_sources
+from app.core.sources import es_scroll, install_sources, get_es, analize_sources, analize_despesas_partidos
 
 
 app = FastAPI()
@@ -26,6 +26,9 @@ if not settings.SKIP_INSTALL:
 
 if not settings.SKIP_ANALIZE:
     app.add_event_handler("startup", analize_sources)
+
+if settings.ANALIZE_PARTIDOS:
+    app.add_event_handler("startup", analize_despesas_partidos)
 
 @app.get("/")
 async def get_status():

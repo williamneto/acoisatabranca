@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     SKIP_ANALIZE: bool
     UFS_INSTALL: str
     CTS_INSTALL: str
+    INSTALL_CANDS: bool
+    INSTALL_PARTIDOS: bool
+    ANALIZE_PARTIDOS: bool
 
     class Config:
         env_file = ".env"
