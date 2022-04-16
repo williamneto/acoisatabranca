@@ -51,7 +51,7 @@ services:
       - CTS_INSTALL=DUQUE DE CAXIAS
       - INSTALL_CANDS=False
       - INSTALL_PARTIDOS=False
-      - ANALIZE_PARTIDOS=True
+      - ANALIZE_PARTIDOS=False
     build: ./backend
     ports:
       - "8000:8000"

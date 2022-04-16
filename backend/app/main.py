@@ -76,24 +76,37 @@ async def get_cidade_data(cidade: str, partido : str = None):
     if partido:
         body = {
             "query": {
-                
-                    "bool": {
-                        "must": [
-                            {
-                                "match": {
-                                    'NM_UE.keyword': cidade
-                                },
-                                "match": {
-                                    'SG_PARTIDO.keyword': partido
-                                }
-                            }
-                        ]
-                    }                
-                
+                "bool": {
+                    "must": [
+                        {
+                            "match": {
+                                'SG_PARTIDO.keyword': partido
+                            },
+                        }, 
+                        {
+                            "match": {
+                                'NM_UE.keyword': cidade
+                            },
+                        }
+                    ]
+                }
             }
         }
+        
+        partido_doacoes = []
+        for doacoes_hits in es_scroll(es, "2020_partidos_doacoes_cands", body, "2m", 40):
+
+            for hit in doacoes_hits:
+                doacao = hit["_source"]
+                
+                doacao["brancs_eleitos_percent"] = "%s %%" % str(round(doacao["brancs_eleitos_percent"], 2))
+                doacao["prets_eleitos_percent"] = "%s %%" % str(round(doacao["prets_eleitos_percent"], 2))
+                partido_doacoes.append(
+                    doacao
+                )
     else:
         body = {'query': {'match': {'NM_UE.keyword': cidade}}}
+        partido_doacoes = []
 
     for cands_hits in es_scroll(es, "2020_analise", body, "2m", 40):
         for cand in cands_hits:
@@ -123,7 +136,8 @@ async def get_cidade_data(cidade: str, partido : str = None):
         "cands_prets": len(cands_prets),
         "cands_prets_eleitos": len(cands_prets_eleitos),
         "percent_cands_prets": "%s %%" % str(round(percent_cands_prets, 2)),
-        "percent_eleitos_prets": "%s %%" % str(round(percent_eleitos_prets, 2))
+        "percent_eleitos_prets": "%s %%" % str(round(percent_eleitos_prets, 2)),
+        "partido_doacoes": partido_doacoes
     }
 
 @app.get(

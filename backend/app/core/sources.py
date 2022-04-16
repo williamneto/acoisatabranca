@@ -201,14 +201,14 @@ def analize_despesas_partidos():
     for doacao_key in partidos_doacoes_cands:
         destino_doacao = {
             "SG_PARTIDO": "",
-            "NM_MUNICIPIO": "%s" % doacao_key.split("_")[1],
+            "NM_UE": "%s" % doacao_key.split("_")[1],
             "total": 0.0,
             "brancs": 0.0,
             "brancs_eleitos": 0.0,
             "brancs_eleitos_percent": 0,
             "prets": 0.0,
             "prets_eleitos": 0.0,
-            "prets_eleitos_percent": 0
+            "prets_eleitos_percent": 0,
         }
         doacoes_partido = partidos_doacoes_cands[doacao_key]
         for doacao in doacoes_partido:
