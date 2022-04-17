@@ -48,7 +48,7 @@ services:
       - SKIP_INSTALL=True
       - SKIP_ANALIZE=True
       - UFS_INSTALL=RJ
-      - CTS_INSTALL=DUQUE DE CAXIAS
+      - CTS_INSTALL=
       - INSTALL_CANDS=False
       - INSTALL_PARTIDOS=False
       - ANALIZE_PARTIDOS=False

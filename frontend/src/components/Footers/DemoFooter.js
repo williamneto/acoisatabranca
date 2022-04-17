@@ -34,7 +34,7 @@ function DemoFooter() {
                   href="mailto:contato@netowill.com"
                   target="_blank"
                 >
-                  William Neto
+                  A Coisa Tá Branca
                 </a>
               </li>
             </ul>
