@@ -19,7 +19,7 @@ COPY ./public/ /app/public
 
 COPY ./src/ /app/src
 
-EXPOSE 80
+EXPOSE 3000
 
 # CMD serve -s build
 CMD yarn start

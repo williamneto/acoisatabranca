@@ -24,7 +24,7 @@ import { useState } from "react";
 import { Button, Container, Input, FormGroup } from "reactstrap";
 
 // core components
-const API = process.env.API
+const API = process.env.REACT_API
 //const API = "http://localhost:8000"
 
 const LandingPageHeader = ( props ) => {

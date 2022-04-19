@@ -4,8 +4,8 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.7.0
     ports:
-      - "9200:9200"
-      - "9300:9300"
+      - "127.0.0.1:9200:9200"
+      - "127.0.0.1:9300:9300"
     environment:
       discovery.type: "single-node"
       ES_JAVA_OPTS: "-Xms2g -Xmx2g"
@@ -36,9 +36,9 @@ services:
       - AUTH_SECRET_TOKEN=barhtah55$tHTf4%&hytyjed6jdy
       - JWT_ALGORITHM=HS256
       - ES_URL=http://elasticsearch:9200
-      - SKIP_INSTALL=True
-      - SKIP_ANALIZE=True
-      - UFS_INSTALL=RJ
+      - SKIP_INSTALL=False
+      - SKIP_ANALIZE=False
+      - UFS_INSTALL=RJ,SP
       - CTS_INSTALL=
       - INSTALL_CANDS=False
       - INSTALL_PARTIDOS=False
@@ -52,9 +52,9 @@ services:
     restart: always
     build: ./frontend
     environment:
-      - API=http://backend:8000
+      - REACT_API=http://backend:8000
     ports:
-      - 80:80
+      - 3000:3000
     volumes: ['./frontend:/app']
 volumes:
   mongo-data:
