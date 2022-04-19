@@ -61,6 +61,7 @@ def install_sources():
     else:
         cands_index_count = 0
         try:
+            logger.info(es)
             search_for_index = es.count(
                 index="2020_cands"
             )
