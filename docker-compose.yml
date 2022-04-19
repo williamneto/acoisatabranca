@@ -1,4 +1,4 @@
-version: '3.7'
+version: '3.3'
 services:
 
   elasticsearch:
@@ -8,10 +8,12 @@ services:
       - "127.0.0.1:9300:9300"
     environment:
       discovery.type: "single-node"
-      ES_JAVA_OPTS: "-Xms2g -Xmx2g"
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
       xpack.monitoring.enabled: "true"
     volumes:
       - ./esdata:/usr/share/elasticsearch/data
+    networks:
+      - elastic
       
   kibana:
     image: docker.elastic.co/kibana/kibana:7.7.0
@@ -21,6 +23,8 @@ services:
       ELASTICSEARCH_URL: http://elasticsearch:9200
     depends_on:
       - elasticsearch
+    networks:
+      - elastic
 
   backend:
     environment:
@@ -47,6 +51,10 @@ services:
     ports:
       - "8000:8000"
     volumes: ["./backend/:/app", "./sources/2020/:/app/sources"]
+    depends_on:
+      - elasticsearch
+    networks:
+      - elastic
 
   frontend:
     restart: always
