@@ -64,6 +64,11 @@ services:
     ports:
       - 3000:3000
     volumes: ['./frontend:/app']
+
+networks:
+  elastic:
+    driver: bridge
+    
 volumes:
   mongo-data:
   sources:
