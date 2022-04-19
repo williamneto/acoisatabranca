@@ -24,7 +24,8 @@ import { useState } from "react";
 import { Button, Container, Input, FormGroup } from "reactstrap";
 
 // core components
-const API = "http://localhost:8000"
+const API = process.env.API
+//const API = "http://localhost:8000"
 
 const LandingPageHeader = ( props ) => {
   const [cidadePesquisa, setCidadePesquisa] = useState();

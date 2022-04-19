@@ -21,15 +21,6 @@ services:
       ELASTICSEARCH_URL: http://elasticsearch:9200
     depends_on:
       - elasticsearch
-  
-  mongo:
-    image: mongo:4.0
-    restart: unless-stopped
-    volumes:
-      - mongo-data:/data
-    command: mongod 
-    ports:
-      - 27017:27017
 
   backend:
     environment:
@@ -57,6 +48,14 @@ services:
       - "8000:8000"
     volumes: ["./backend/:/app", "./sources/2020/:/app/sources"]
 
+  frontend:
+    restart: always
+    build: ./frontend
+    environment:
+      - API=http://backend:8000
+    ports:
+      - 80:80
+    volumes: ['./frontend:/app']
 volumes:
   mongo-data:
   sources:
