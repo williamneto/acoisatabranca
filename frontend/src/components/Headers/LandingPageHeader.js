@@ -16,20 +16,24 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import React from "react";
+import React, { useEffect } from "react";
 import axios from "axios";
 import { useState } from "react";
+import Select from 'react-select'
 
 // reactstrap components
 import { Button, Container, Input, FormGroup } from "reactstrap";
 
 // core components
-const API = process.env.REACT_API
-//const API = "http://localhost:8000"
+// const API = process.env.REACT_APP_API
+const API = "http://localhost:8000"
 
 const LandingPageHeader = ( props ) => {
   const [cidadePesquisa, setCidadePesquisa] = useState();
   const [partidoPesquisa, setPartidoPesquisa] = useState();
+
+  const [cidadesOptions, setCidadesOptions] = useState([])
+  const [partidosOptions, setPartidosOptions] = useState([])
 
   let pageHeader = React.createRef();
 
@@ -57,13 +61,18 @@ const LandingPageHeader = ( props ) => {
         url = `${API}/cidade/?cidade=${cidadePesquisa}`
       }
       axios.get(url).then( response => {
-        props.setData(
-          {
-            "cidade": cidadePesquisa,
-            "partido": partidoPesquisa,
-            "data": response.data
-          }
-        )
+        if (response.data.total_cands > 0){
+          props.setSearchFail(false)
+          props.setData(
+            {
+              "cidade": cidadePesquisa,
+              "partido": partidoPesquisa,
+              "data": response.data
+            }
+          )
+        } else {
+          props.setSearchFail(true)
+        }
 
         window.scrollTo(0, document.body.scrollHeight)
       })
@@ -71,6 +80,58 @@ const LandingPageHeader = ( props ) => {
       alert("Digite uma cidade para pesquisa")
     }
   }
+
+  const getCidadesOptions = () => {
+    axios.get(`${API}/cidades/`).then( response => {
+      let cidadesOptions = []
+      for ( let cidade of response.data) {
+        cidadesOptions.push(
+          {
+            "value": cidade.NM_UE,
+            "label": cidade.NM_UE
+          }
+        )
+      }
+
+      setCidadesOptions(cidadesOptions)
+    })
+  }
+
+  const getPartidosOptions = () => {
+    axios.get(`${API}/partidos/`).then( response => {
+      let partidosOptions = []
+      for ( let partido of response.data) {
+        partidosOptions.push(
+          {
+            "value": partido.SG_PARTIDO,
+            "label": partido.SG_PARTIDO
+          }
+        )
+      }
+
+      setPartidosOptions(partidosOptions)
+    })
+  }
+
+  useEffect( () => {
+    getCidadesOptions()
+  }, [])
+
+  useEffect( () => {
+    getPartidosOptions()
+  }, [])
+
+  const colourStyles = {
+    control: styles => ({ ...styles, backgroundColor: 'white' }),
+    option: (styles, { data, isDisabled, isFocused, isSelected }) => {
+      const color = "black";
+      return {
+        ...styles,
+        color: color,
+        cursor: isDisabled ? 'not-allowed' : 'default',
+      };
+    },
+  };
   return (
     <>
       <div
@@ -90,21 +151,19 @@ const LandingPageHeader = ( props ) => {
             <br />
 
             <FormGroup>
-              <Input 
-                type="text" 
-                name="cidade" 
-                id="cidadePesquisa" 
+              <Select 
+                options={cidadesOptions} 
                 placeholder="Cidade"
-                value={cidadePesquisa}
-                onChange={ e => setCidadePesquisa(e.target.value)}
+                onChange={ e => setCidadePesquisa(e.value)}
+                defaultValue={cidadePesquisa}
+                styles={colourStyles}
               />
-              <Input 
-                type="text" 
-                name="partido" 
-                id="partidoPesquisa" 
+              <Select 
+                options={partidosOptions} 
                 placeholder="Partido (opcional)"
-                value={partidoPesquisa}
-                onChange={ e => setPartidoPesquisa(e.target.value)}
+                onChange={ e => setPartidoPesquisa(e.value)}
+                defaultValue={partidoPesquisa}
+                styles={colourStyles}
               />
             </FormGroup>
             <Button 
