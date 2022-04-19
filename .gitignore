@@ -3,3 +3,5 @@ sources/
 *.pyc
 esdata/
 *.Itentifier
+*.zip
+*-lock.json
