@@ -43,7 +43,7 @@ services:
       - ES_URL=http://elasticsearch:9200
       - SKIP_INSTALL=False
       - SKIP_ANALIZE=False
-      - UFS_INSTALL=RJ,SP
+      - UFS_INSTALL=RJ
       - CTS_INSTALL=
       - INSTALL_CANDS=True
       - INSTALL_PARTIDOS=True
