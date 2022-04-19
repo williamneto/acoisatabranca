@@ -14,9 +14,9 @@ MAX_RETRIES = int(os.getenv('MAX_RETRIES',2))
 MINIO_TIMEOUT= int(os.getenv('MINIO_TIMEOUT',30))
 
 def get_es(es_url, es_user, es_pass):
-        es = Elasticsearch(es_url, basic_auth=(es_user, es_pass) )
-        
-        return es
+    es = Elasticsearch(es_url, basic_auth=(es_user, es_pass) )
+    
+    return es
 
 def send_to_elastic(data, es_index, es_url, es_user, es_pass):
     es = get_es(es_url, es_user, es_pass)
@@ -53,6 +53,7 @@ def install_sources():
     skip_install = settings.SKIP_INSTALL 
     ufs_to_install = settings.UFS_INSTALL.split(",")
     logger.info("UFs a instalar: %s " % ufs_to_install)
+    logger.info(settings.ES_URL)
     es = get_es(settings.ES_URL, "", "")
     
     if skip_install:

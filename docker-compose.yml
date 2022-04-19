@@ -40,9 +40,9 @@ services:
       - SKIP_ANALIZE=False
       - UFS_INSTALL=RJ,SP
       - CTS_INSTALL=
-      - INSTALL_CANDS=False
-      - INSTALL_PARTIDOS=False
-      - ANALIZE_PARTIDOS=False
+      - INSTALL_CANDS=True
+      - INSTALL_PARTIDOS=True
+      - ANALIZE_PARTIDOS=True
     build: ./backend
     ports:
       - "8000:8000"
