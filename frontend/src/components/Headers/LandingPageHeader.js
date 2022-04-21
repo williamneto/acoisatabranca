@@ -22,11 +22,11 @@ import { useState } from "react";
 import Select from 'react-select'
 
 // reactstrap components
-import { Button, Container, Input, FormGroup } from "reactstrap";
+import { Button, Container, FormGroup } from "reactstrap";
 
 // core components
-// const API = process.env.REACT_APP_API
-const API = "http://localhost:8000"
+const API = process.env.REACT_APP_API
+//const API = "http://localhost:8000"
 
 const LandingPageHeader = ( props ) => {
   const [cidadePesquisa, setCidadePesquisa] = useState();

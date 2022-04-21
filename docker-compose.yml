@@ -56,14 +56,22 @@ services:
       - elasticsearch
     networks:
       - elastic
+    
+  nginx:
+    depends_on:
+      - frontend
+    restart: always
+    build:
+      dockerfile: Dockerfile
+      context: ./nginx
+    ports:
+      - "3000:80"
 
   frontend:
     restart: always
     build: ./frontend
     environment:
-      - REACT_API=http://backend:8000
-    ports:
-      - 3000:3000
+      - REACT_APP_API=http://acoisatabranca.com.br:8000
     volumes: ['./frontend:/app']
 
 networks:
