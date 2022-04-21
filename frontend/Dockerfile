@@ -11,7 +11,7 @@ WORKDIR /app
 # RUN yarn install && \
 #     yarn build && \
 #     yarn global add serve
-RUN yarn install 
+RUN npm install 
 
 RUN DEBIAN_FRONTEND="noninteractive" apt autoremove
 
@@ -22,4 +22,4 @@ COPY ./src/ /app/src
 EXPOSE 3000
 
 # CMD serve -s build
-CMD yarn start
+CMD npm start
