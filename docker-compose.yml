@@ -70,6 +70,7 @@ services:
   frontend:
     restart: always
     build: ./frontend
+    stdin_open: true
     environment:
       - REACT_APP_API=http://acoisatabranca.com.br:8000
     volumes: ['./frontend:/app']
