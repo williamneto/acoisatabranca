@@ -4,7 +4,7 @@ RUN DEBIAN_FRONTEND="noninteractive" apt update && \
     DEBIAN_FRONTEND="noninteractive" apt install -y build-essential git python3
 
 COPY ./package.json /app/package.json
-
+RUN sudo chmod -R 777 /app
 WORKDIR /app
 
 # Production
