@@ -21,14 +21,6 @@ app.add_middleware(
 
 app.add_event_handler("startup", connect_db)
 app.add_event_handler("shutdown", close_db)
-if not settings.SKIP_INSTALL:
-    app.add_event_handler("startup", install_sources)
-
-if not settings.SKIP_ANALIZE:
-    app.add_event_handler("startup", analize_sources)
-
-if settings.ANALIZE_PARTIDOS:
-    app.add_event_handler("startup", analize_despesas_partidos)
 
 @app.get("/")
 async def get_status():

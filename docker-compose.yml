@@ -15,7 +15,7 @@ services:
       - ./esdata:/usr/share/elasticsearch/data
     networks:
       - elastic
-      
+    
   kibana:
     image: docker.elastic.co/kibana/kibana:7.7.0
     ports:
@@ -26,7 +26,7 @@ services:
       - elasticsearch
     networks:
       - elastic
-
+    
   backend:
     environment:
       - ENV=development
@@ -41,13 +41,6 @@ services:
       - AUTH_SECRET_TOKEN=barhtah55$tHTf4%&hytyjed6jdy
       - JWT_ALGORITHM=HS256
       - ES_URL=http://elasticsearch:9200
-      - SKIP_INSTALL=False
-      - SKIP_ANALIZE=False
-      - UFS_INSTALL=RJ
-      - CTS_INSTALL=
-      - INSTALL_CANDS=True
-      - INSTALL_PARTIDOS=True
-      - ANALIZE_PARTIDOS=True
     build: ./backend
     ports:
       - "8000:8000"
@@ -56,6 +49,17 @@ services:
       - elasticsearch
     networks:
       - elastic
+  
+  sources-loader:
+    build: ./backend
+    environment:
+      - ES_URL=http://elasticsearch:9200
+    volumes: ["./backend/:/app", "./sources/2020/:/app/sources"]
+    depends_on:
+      - elasticsearch
+    networks:
+      - elastic
+    command: python3 sources_loader.py --cands --analise --partidos -uf RJ -uf SP
     
   nginx:
     depends_on:
