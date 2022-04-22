@@ -22,16 +22,18 @@ import { useState } from "react";
 import Select from 'react-select'
 
 // reactstrap components
-import { Button, Container, FormGroup } from "reactstrap";
+import { Button, Container, FormGroup, Row, Col } from "reactstrap";
 
 // core components
 const API = process.env.REACT_APP_API
 //const API = "http://localhost:8000"
 
 const LandingPageHeader = ( props ) => {
+  const [ufPesquisa, setUfPesquisa] = useState()
   const [cidadePesquisa, setCidadePesquisa] = useState();
   const [partidoPesquisa, setPartidoPesquisa] = useState();
 
+  const [ufsOptions, setUfsOptions] = useState([])
   const [cidadesOptions, setCidadesOptions] = useState([])
   const [partidosOptions, setPartidosOptions] = useState([])
 
@@ -81,8 +83,24 @@ const LandingPageHeader = ( props ) => {
     }
   }
 
-  const getCidadesOptions = () => {
-    axios.get(`${API}/cidades/`).then( response => {
+  const getUfsOptions = () => {
+    axios.get(`${API}/estados/`).then( response => {
+      let ufsOptions = []
+      for ( let uf of response.data) {
+        ufsOptions.push(
+          {
+            "value": uf,
+            "label": uf
+          }
+        )
+      }
+
+      setUfsOptions(ufsOptions)
+    })
+  }
+
+  const getCidadesOptions = (uf) => {
+    axios.get(`${API}/cidades/?uf=${uf}`).then( response => {
       let cidadesOptions = []
       for ( let cidade of response.data) {
         cidadesOptions.push(
@@ -113,8 +131,17 @@ const LandingPageHeader = ( props ) => {
     })
   }
 
+  const handleUfChange = uf => {
+    console.log(uf)
+    console.log(ufsOptions)
+    if ( ufsOptions.includes(uf) ) {
+      setUfPesquisa(uf.value)
+      getCidadesOptions(uf.value)
+    }
+  }
+
   useEffect( () => {
-    getCidadesOptions()
+    getUfsOptions()
   }, [])
 
   useEffect( () => {
@@ -150,6 +177,21 @@ const LandingPageHeader = ( props ) => {
             <h3>Monitor da representatividade negra na política</h3>
             <br />
 
+            <Row>
+              <Col>
+                <FormGroup>
+                  <Select 
+                    options={ufsOptions} 
+                    placeholder="UF"
+                    onChange={ e => handleUfChange(e)}
+                    defaultValue={ufPesquisa}
+                    styles={colourStyles}
+                  />
+                  
+                </FormGroup>
+              </Col>
+              
+              <Col>
             <FormGroup>
               <Select 
                 options={cidadesOptions} 
@@ -158,6 +200,13 @@ const LandingPageHeader = ( props ) => {
                 defaultValue={cidadePesquisa}
                 styles={colourStyles}
               />
+                </FormGroup>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col>
+                <FormGroup>
               <Select 
                 options={partidosOptions} 
                 placeholder="Partido (opcional)"
@@ -166,6 +215,9 @@ const LandingPageHeader = ( props ) => {
                 styles={colourStyles}
               />
             </FormGroup>
+              </Col>
+            </Row>
+
             <Button 
               className="btn-round" 
               color="neutral" 

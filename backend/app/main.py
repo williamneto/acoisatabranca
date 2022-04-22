@@ -144,15 +144,30 @@ async def get_cidade_data(cidade: str, partido : str = None):
 @app.get(
     "/cidades/"
 )
-async def get_avaliable_cidades():
+async def get_avaliable_cidades(uf : str = None):
     es = get_es(
         settings.ES_URL, "", ""
     )
-    body = {
-        "query": {
-            "match_all": {}
+    if uf:
+        body = {
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "match": {
+                                "SG_UF.keyword": uf
+                            }
+                        }
+                    ]
+                }
+            }
         }
-    }
+    else:
+        body = {
+            "query": {
+                "match_all": {}
+            }
+        }
 
     
 
@@ -164,6 +179,29 @@ async def get_avaliable_cidades():
             )
     
     return cidades
+
+@app.get(
+    "/estados/"
+)
+async def get_avaliable_estados():
+    es = get_es(
+        settings.ES_URL, "", ""
+    )
+    body = {
+        "query": {
+            "match_all": {}
+        }
+    }
+
+    
+
+    estados = []
+    for cidade_hits in es_scroll(es, "ues_mapping", body, "2m", 40):
+        for cidade in cidade_hits:
+            if not cidade["_source"]["SG_UF"] in estados:
+                estados.append(cidade["_source"]["SG_UF"])
+                
+    return estados
 
 @app.get(
     "/partidos/"
