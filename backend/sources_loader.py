@@ -15,6 +15,8 @@ args_parser.set_defaults(partidos=False)
 args_parser.add_argument('-uf', action='append')
 args_parser.add_argument('-cidades', action='append')
 
+args = args_parser.parse_args()
+
 settings = {
     "ES_URL": os.getenv("ES_URL")
 }
