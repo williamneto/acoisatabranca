@@ -325,9 +325,7 @@ def install_sources():
                 item["id"] = "%s_%s" % (item["SQ_RECEITA"], item["DT_RECEITA"])
                 send_to_elastic(
                     item,
-                    "2020_receitas_partidos",
-                    settings["ES_URL"],
-                    "", ""
+                    "2020_receitas_partidos"
                 )
 
     def install_despesas_partidos():
@@ -339,9 +337,7 @@ def install_sources():
                 item["id"] = "%s_%s" % (item["SQ_DESPESA"], item["DT_DESPESA"])
                 send_to_elastic(
                     item,
-                    "2020_despesas_partidos",
-                    settings["ES_URL"],
-                    "", ""
+                    "2020_despesas_partidos"
                 )
 
     if args.cands:
