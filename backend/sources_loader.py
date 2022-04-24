@@ -1,3 +1,4 @@
+from shutil import ExecError
 from loguru import logger
 
 import csv, requests, os, time, argparse
@@ -63,9 +64,16 @@ def es_scroll(es, index, body, scroll, size, **kw):
     hits = page['hits']['hits']
     while len(hits):
         yield hits
-        page = es.scroll(scroll_id=scroll_id, scroll=scroll)
-        scroll_id = page['_scroll_id']
-        hits = page['hits']['hits']    
+        retry = True
+        while retry:
+            try:
+                page = es.scroll(scroll_id=scroll_id, scroll=scroll)
+                scroll_id = page['_scroll_id']
+                hits = page['hits']['hits']  
+                retry = False  
+            except Exception as e:
+                logger.info(e)
+                time.sleep(0.3)
 
 def analize_despesas_partidos():
     es = get_es()
