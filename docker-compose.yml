@@ -60,6 +60,17 @@ services:
     networks:
       - elastic
     command: python3 sources_loader.py --cands --analise --partidos -uf CE
+  
+  sources-loader-2:
+    build: ./backend
+    environment:
+      - ES_URL=http://elasticsearch:9200
+    volumes: ["./backend/:/app", "./sources/2020/:/app/sources"]
+    depends_on:
+      - elasticsearch
+    networks:
+      - elastic
+    command: python3 sources_loader.py --cands --analise --partidos -uf SE
     
   nginx:
     depends_on:
