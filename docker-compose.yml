@@ -59,7 +59,7 @@ services:
       - elasticsearch
     networks:
       - elastic
-    command: python3 sources_loader.py --cands --analise --partidos -uf RJ -uf SP
+    command: python3 sources_loader.py --cands --analise --partidos -uf CE
     
   nginx:
     depends_on:
