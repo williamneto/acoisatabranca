@@ -19,7 +19,11 @@ COPY ./public/ /app/public
 
 COPY ./src/ /app/src
 
-EXPOSE 3000
+RUN npm run build
 
-# CMD serve -s build
-CMD npm start
+FROM nginx:1.16.0-alpine
+COPY --from=builder /build /usr/share/nginx/html
+RUN rm /etc/nginx/conf.d/default.conf
+COPY nginx/nginx.conf /etc/nginx/conf.d
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
