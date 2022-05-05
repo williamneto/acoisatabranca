@@ -92,7 +92,7 @@ services:
       - elasticsearch
     networks:
       - elastic
-    command: python3 sources_loader.py --cands --analise --partidos -uf AC -uf AL -uf UM -uf AP
+    command: python3 sources_loader.py --cands --analise --partidos -uf AC -uf AL -uf AM -uf AP
   
   sources-loader-5:
     build: ./backend
