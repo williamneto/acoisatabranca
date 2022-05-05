@@ -59,7 +59,15 @@ def send_to_elastic(data, es_index):
             time.sleep(0.5)
 
 def es_scroll(es, index, body, scroll, size, **kw):
-    page = es.search(index=index, body=body, scroll=scroll, size=size, **kw)
+    retry_search = True
+    while retry_search:
+        try:
+            page = es.search(index=index, body=body, scroll=scroll, size=size, **kw)
+            retry_search = False
+        except Exception as e:
+            logger.info(e)
+            time.sleep(0.3)
+
     scroll_id = page['_scroll_id']
     hits = page['hits']['hits']
     while len(hits):
