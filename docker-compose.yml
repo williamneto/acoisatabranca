@@ -59,7 +59,7 @@ services:
       - elasticsearch
     networks:
       - elastic
-    command: python3 sources_loader.py --cands --analise --partidos -uf RJ
+    command: python3 sources_loader.py --cands --analise --partidos -uf RJ -uf CE
   
   sources-loader-2:
     build: ./backend
@@ -81,7 +81,7 @@ services:
       - elasticsearch
     networks:
       - elastic
-    command: python3 sources_loader.py --cands --analise --partidos -uf CE
+    command: python3 sources_loader.py --cands --analise --partidos -uf SE -uf MA
     
   nginx:
     depends_on:
