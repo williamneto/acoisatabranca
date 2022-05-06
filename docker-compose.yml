@@ -11,6 +11,7 @@ services:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
       - xpack.monitoring.enabled=true
+      - search.max_open_scroll_context=5000
     volumes:
       - ./esdata:/usr/share/elasticsearch/data
     networks:
