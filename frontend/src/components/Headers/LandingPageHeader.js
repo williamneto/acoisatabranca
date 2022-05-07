@@ -164,7 +164,7 @@ const LandingPageHeader = ( props ) => {
       <div
         style={{
           backgroundImage:
-            "url(" + require("assets/img/mnu.png").default + ")",
+            "url(" + require("assets/img/mnu.png") + ")",
         }}
         className="page-header"
         data-parallax={true}

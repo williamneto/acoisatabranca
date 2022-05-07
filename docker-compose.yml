@@ -50,6 +50,7 @@ services:
       - elasticsearch
     networks:
       - elastic
+      - webapp
   
   sources-loader-1:
     build: ./backend
@@ -146,20 +147,26 @@ services:
     build:
       dockerfile: Dockerfile
       context: ./nginx
+    networks:
+      - webapp
     ports:
-      - "3000:80"
+      - "80:80"
 
   frontend:
     restart: always
     build: ./frontend
     stdin_open: true
     environment:
-      - REACT_APP_API=http://104.154.151.218/:8000
+      - REACT_APP_API=http://localhost:8000
     volumes: ['./frontend:/app']
+    networks:
+      - webapp
     ports:
-    - 80:80
+    - "3000:3000"
 
 networks:
+  webapp:
+    driver: bridge
   elastic:
     driver: bridge
 
