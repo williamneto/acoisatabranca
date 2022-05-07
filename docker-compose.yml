@@ -154,8 +154,10 @@ services:
     build: ./frontend
     stdin_open: true
     environment:
-      - REACT_APP_API=http://acoisatabranca.com.br:8000
+      - REACT_APP_API=http://104.154.151.218/:8000
     volumes: ['./frontend:/app']
+    ports:
+    - 80:80
 
 networks:
   elastic:

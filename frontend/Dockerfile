@@ -4,7 +4,7 @@ RUN DEBIAN_FRONTEND="noninteractive" apt update && \
     DEBIAN_FRONTEND="noninteractive" apt install -y build-essential git python3
 
 COPY ./package.json /app/package.json
-RUN chmod -R 777 /app
+
 WORKDIR /app
 
 # Production
@@ -19,6 +19,7 @@ COPY ./public/ /app/public
 
 COPY ./src/ /app/src
 
-RUN npm start
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 3000
+
+# CMD serve -s build
+CMD npm start
