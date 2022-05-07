@@ -84,80 +84,82 @@ def es_scroll(es, index, body, scroll, size, **kw):
                 logger.info(e)
                 time.sleep(0.3)
 
-def analize_despesas_partidos():
+def analize_despesas_partidos(ufs):
     es = get_es()
 
-    body = {
-        "query": {
-            "match_all": {}
+    for uf in ufs:
+        body = {
+            "query": {
+                "term": {
+                    "SG_UF.keyword": uf
+                }
+            }
         }
-    }
-    partidos_doacoes_cands = {}
-    for despesas_hits in es_scroll(es, "2020_despesas_partidos", body,"2m", 40):
-        for despesa in despesas_hits:
-            despesa = despesa["_source"]
-            if despesa["DS_ORIGEM_DESPESA"] == "Doações financeiras a outros candidatos/partidos":
-                despesa_key = "%s_%s" % ( despesa["SG_PARTIDO"], despesa["NM_MUNICIPIO_FORNECEDOR"])
-                if despesa_key in partidos_doacoes_cands:
-                    partidos_doacoes_cands[despesa_key].append(
-                        despesa
-                    )
-                else:
-                    partidos_doacoes_cands[despesa_key] = [despesa]
-    
-    for doacao_key in partidos_doacoes_cands:
-        destino_doacao = {
-            "SG_PARTIDO": "",
-            "NM_UE": "%s" % doacao_key.split("_")[1],
-            "total": 0.0,
-            "brancs": 0.0,
-            "brancs_eleitos": 0.0,
-            "brancs_eleitos_percent": 0,
-            "prets": 0.0,
-            "prets_eleitos": 0.0,
-            "prets_eleitos_percent": 0,
-        }
-        doacoes_partido = partidos_doacoes_cands[doacao_key]
-        for doacao in doacoes_partido:
-            if doacao["DS_CARGO_FORNECEDOR"] != "#NULO#":
-                destino_doacao["SG_PARTIDO"] = doacao["SG_PARTIDO"]
-                destino_doacao["total"] += float(doacao["VR_DESPESA_CONTRATADA"].replace(",", "."))
-                body = {"query": {
-                    "term": {
-                        "SQ_CANDIDATO.keyword": doacao["SQ_CANDIDATO_FORNECEDOR"] 
-                    }
-                }}
-                search = es.search(
-                    index="2020_cands",
-                    body=body
-                )
-                if len(search["hits"]["hits"]) > 0:
-                    cand = search["hits"]["hits"][0]["_source"]
-                    if cand["DS_COR_RACA"] == "PARDA" or cand["DS_COR_RACA"] == "PRETA":
-                        destino_doacao["prets"] += float(doacao["VR_DESPESA_CONTRATADA"].replace(",", "."))
-                        if cand["DS_SIT_TOT_TURNO"] == "ELEITO POR QP" or cand["DS_SIT_TOT_TURNO"] == "ELEITO POR MÉDIA" or cand["DS_SIT_TOT_TURNO"] == "ELEITO":
-                            destino_doacao["prets_eleitos"] += float(doacao["VR_DESPESA_CONTRATADA"].replace(",", "."))
+        partidos_doacoes_cands = {}
+        for despesas_hits in es_scroll(es, "2020_despesas_partidos", body,"2m", 40):
+            for despesa in despesas_hits:
+                despesa = despesa["_source"]
+                if despesa["DS_ORIGEM_DESPESA"] == "Doações financeiras a outros candidatos/partidos":
+                    despesa_key = "%s_%s" % ( despesa["SG_PARTIDO"], despesa["NM_MUNICIPIO_FORNECEDOR"])
+                    if despesa_key in partidos_doacoes_cands:
+                        partidos_doacoes_cands[despesa_key].append(
+                            despesa
+                        )
                     else:
-                        destino_doacao["brancs"] += float(doacao["VR_DESPESA_CONTRATADA"].replace(",", "."))
-                        if cand["DS_SIT_TOT_TURNO"] == "ELEITO POR QP" or cand["DS_SIT_TOT_TURNO"] == "ELEITO POR MÉDIA" or cand["DS_SIT_TOT_TURNO"] == "ELEITO":
-                            destino_doacao["brancs_eleitos"] += float(doacao["VR_DESPESA_CONTRATADA"].replace(",", "."))
-            
-        destino_doacao["id"] = doacao_key
-        if destino_doacao["total"] > 0:
-            destino_doacao["brancs_eleitos_percent"] = (  destino_doacao["brancs_eleitos"] / destino_doacao["total"] ) * 100
-            destino_doacao["prets_eleitos_percent"] = (  destino_doacao["prets_eleitos"] / destino_doacao["total"] ) * 100
-            destino_doacao["brancs_percent"] = (  destino_doacao["brancs"] / destino_doacao["total"] ) * 100
-            destino_doacao["prets_percent"] = (  destino_doacao["prets"] / destino_doacao["total"] ) * 100
+                        partidos_doacoes_cands[despesa_key] = [despesa]
+        
+        for doacao_key in partidos_doacoes_cands:
+            destino_doacao = {
+                "SG_PARTIDO": "",
+                "NM_UE": "%s" % doacao_key.split("_")[1],
+                "total": 0.0,
+                "brancs": 0.0,
+                "brancs_eleitos": 0.0,
+                "brancs_eleitos_percent": 0,
+                "prets": 0.0,
+                "prets_eleitos": 0.0,
+                "prets_eleitos_percent": 0,
+            }
+            doacoes_partido = partidos_doacoes_cands[doacao_key]
+            for doacao in doacoes_partido:
+                if doacao["DS_CARGO_FORNECEDOR"] != "#NULO#":
+                    destino_doacao["SG_PARTIDO"] = doacao["SG_PARTIDO"]
+                    destino_doacao["total"] += float(doacao["VR_DESPESA_CONTRATADA"].replace(",", "."))
+                    body = {"query": {
+                        "term": {
+                            "SQ_CANDIDATO.keyword": doacao["SQ_CANDIDATO_FORNECEDOR"] 
+                        }
+                    }}
+                    search = es.search(
+                        index="2020_cands",
+                        body=body
+                    )
+                    if len(search["hits"]["hits"]) > 0:
+                        cand = search["hits"]["hits"][0]["_source"]
+                        if cand["DS_COR_RACA"] == "PARDA" or cand["DS_COR_RACA"] == "PRETA":
+                            destino_doacao["prets"] += float(doacao["VR_DESPESA_CONTRATADA"].replace(",", "."))
+                            if cand["DS_SIT_TOT_TURNO"] == "ELEITO POR QP" or cand["DS_SIT_TOT_TURNO"] == "ELEITO POR MÉDIA" or cand["DS_SIT_TOT_TURNO"] == "ELEITO":
+                                destino_doacao["prets_eleitos"] += float(doacao["VR_DESPESA_CONTRATADA"].replace(",", "."))
+                        else:
+                            destino_doacao["brancs"] += float(doacao["VR_DESPESA_CONTRATADA"].replace(",", "."))
+                            if cand["DS_SIT_TOT_TURNO"] == "ELEITO POR QP" or cand["DS_SIT_TOT_TURNO"] == "ELEITO POR MÉDIA" or cand["DS_SIT_TOT_TURNO"] == "ELEITO":
+                                destino_doacao["brancs_eleitos"] += float(doacao["VR_DESPESA_CONTRATADA"].replace(",", "."))
+                
+            destino_doacao["id"] = doacao_key
+            if destino_doacao["total"] > 0:
+                destino_doacao["brancs_eleitos_percent"] = (  destino_doacao["brancs_eleitos"] / destino_doacao["total"] ) * 100
+                destino_doacao["prets_eleitos_percent"] = (  destino_doacao["prets_eleitos"] / destino_doacao["total"] ) * 100
+                destino_doacao["brancs_percent"] = (  destino_doacao["brancs"] / destino_doacao["total"] ) * 100
+                destino_doacao["prets_percent"] = (  destino_doacao["prets"] / destino_doacao["total"] ) * 100
 
-        send_to_elastic(
-            destino_doacao,
-            "2020_partidos_doacoes_cands",
-            
-        )
+            send_to_elastic(
+                destino_doacao,
+                "2020_partidos_doacoes_cands",
+                
+            )
 
-def analize_sources():
+def analize_sources(ufs):
     es = get_es()
-    cidades = args.cidades or []
     
     def save_cidade_partido(cand):
         send_to_elastic(
@@ -222,21 +224,13 @@ def analize_sources():
 
         save_cidade_partido(cand)
         time.sleep(0.2)
-    if len(cidades) > 1:
-        for cidade in cidades:
-            body={'query': {'term': {'NM_UE.keyword': cidade}}}
-            cidade_cands = []
-            for cands in es_scroll(es, "2020_cands", body, '2m', 20):
-                for cand in cands:
-                    cidade_cands.append(cand["_source"])
-
-            for cand in cidade_cands:  
-                analisa_receitas(cand)
-                time.sleep(0.2)
-    else:
+    
+    for uf in ufs:
         body = {
             "query": {
-                "match_all": {}
+                "term": {
+                    "SG_UF.keyword": uf
+                }
             }
         }
         cidade_cands = []
@@ -416,11 +410,11 @@ def install_sources():
     if args.cands:
         install_cands()
         install_cands_receitas()
-        analize_sources()
+        analize_sources(ufs_to_install)
 
     if args.partidos:
         install_receitas_partidos()
         install_despesas_partidos()
-        analize_despesas_partidos()
+        analize_despesas_partidos(ufs_to_install)
 
 install_sources()
