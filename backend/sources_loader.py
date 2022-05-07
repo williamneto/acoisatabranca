@@ -1,3 +1,4 @@
+from ast import keyword
 from shutil import ExecError
 from loguru import logger
 
@@ -250,36 +251,14 @@ def analize_sources():
 def install_sources():
     ufs_to_install = args.uf or []
     logger.info("UFs a instalar: %s " % ufs_to_install)
-    logger.info(settings["ES_URL"])
     es = get_es()
-    
-
-    cands_index_count = 0
-    try:
-        logger.info(es)
-        search_for_index = es.count(
-            index="2020_cands"
-        )
-        cands_index_count = search_for_index["count"]
-        
-    except NotFoundError:
-        cands_index_count = 0
-    
-    receitas_index_count = 0
-    try:
-        search_for_index = es.count(
-            index="2020_receitas"
-        )
-        receitas_index_count = search_for_index["count"]
-        
-    except NotFoundError:
-        receitas_index_count = 0
 
     source_files = []
     if len(ufs_to_install) > 0:
         for uf in ufs_to_install:
             source_files.append(
                 {
+                    "uf": uf,
                     "cands": "sources/candidaturas/consulta_cand_2020_%s.csv" % uf,
                     "receitas": "sources/prestacao_candidaturas/receitas_candidatos_2020_%s.csv" % uf,
                     "receitas_partidos": "sources/prestacao_orgaos/receitas_orgaos_partidarios_2020_%s.csv" % uf,
@@ -310,10 +289,29 @@ def install_sources():
 
     def install_cands():
         for src in source_files:
+
+            cands_index_count = 0
+            try:
+                search_for_index = es.count(
+                    index="2020_cands",
+                    body={
+                        "query": {
+                            "term": {
+                                "SG_UF.keyword": src["uf"]
+                            }
+                        }
+                    }
+                )
+                cands_index_count = search_for_index["count"]
+            except NotFoundError:
+                cands_index_count = 0
+
             cands_source_dict = get_source_dict(src["cands"])
             logger.info(">>> Carregando recurso: %s" % src["cands"])
-            for item in cands_source_dict:
-                # if cands_source_dict.index(item) > cands_index_count:
+            logger.info(">>>>>> %s itens no arquivo" % len(cands_source_dict))
+            logger.info(">>>>>> %s itens já salvos no indice" % cands_index_count)
+
+            for item in cands_source_dict[cands_index_count:]:
                 item["id"] = item["SQ_CANDIDATO"]
                 send_to_elastic(
                     item,
@@ -322,9 +320,30 @@ def install_sources():
 
     def install_cands_receitas():
         for src in source_files:
+            receitas_index_count = 0
+            try:
+                search_for_index = es.count(
+                    index="2020_receitas",
+                    body={
+                        "query": {
+                            "term": {
+                                "SG_UF.keyword": src["uf"]
+                            }
+                        }
+                    }
+                )
+                receitas_index_count = search_for_index["count"]
+                
+            except NotFoundError:
+                receitas_index_count = 0
+
             receitas_source_dict = get_source_dict(src["receitas"])
             logger.info(">>> Carregando recurso: %s" % src["receitas"])
-            for item in receitas_source_dict:
+            logger.info(">>> Carregando recurso: %s" % src["cands"])
+            logger.info(">>>>>> %s itens no arquivo" % len(receitas_source_dict))
+            logger.info(">>>>>> %s itens já salvos no indice" % receitas_index_count)
+
+            for item in receitas_source_dict[receitas_index_count:]:
                 # if receitas_source_dict.index(item) > receitas_index_count:
                 item["id"] = "%s_%s" % (item["SQ_RECEITA"], item["DT_RECEITA"])
                 send_to_elastic(
@@ -334,10 +353,29 @@ def install_sources():
     
     def install_receitas_partidos():
         for src in source_files:
+            receitas_index_count = 0
+            try:
+                search_for_index = es.count(
+                    index="2020_receitas_partidos",
+                    body={
+                        "query": {
+                            "term": {
+                                "SG_UF.keyword": src["uf"]
+                            }
+                        }
+                    }
+                )
+                receitas_index_count = search_for_index["count"]
+                
+            except NotFoundError:
+                receitas_index_count = 0
+
             receitas_partidos_source_dict = get_source_dict(src["receitas_partidos"])
             logger.info(">>> Carregando recurso: %s" % src["receitas_partidos"])
-            for item in receitas_partidos_source_dict:
-                # if receitas_partidos_source_dict.index(item) > receitas_partidos_index_count:
+            logger.info(">>>>>> %s itens no arquivo" % len(receitas_partidos_source_dict))
+            logger.info(">>>>>> %s itens já salvos no indice" % receitas_index_count)
+
+            for item in receitas_partidos_source_dict[receitas_index_count:]:
                 item["id"] = "%s_%s" % (item["SQ_RECEITA"], item["DT_RECEITA"])
                 send_to_elastic(
                     item,
@@ -346,10 +384,29 @@ def install_sources():
 
     def install_despesas_partidos():
         for src in source_files:
+            despesas_index_count = 0
+            try:
+                search_for_index = es.count(
+                    index="2020_despesas_partidos",
+                    body={
+                        "query": {
+                            "term": {
+                                "SG_UF.keyword": src["uf"]
+                            }
+                        }
+                    }
+                )
+                despesas_index_count = search_for_index["count"]
+                
+            except NotFoundError:
+                despesas_index_count = 0
+
             despesas_partidos_source_dict = get_source_dict(src["despesas_partidos"])
             logger.info(">>> Carregando recurso: %s" % src["despesas_partidos"])
-            for item in despesas_partidos_source_dict:
-                # if despesas_source_dict.index(item) > despesas_index_count:
+            logger.info(">>>>>> %s itens no arquivo" % len(despesas_partidos_source_dict))
+            logger.info(">>>>>> %s itens já salvos no indice" % despesas_index_count)
+
+            for item in despesas_partidos_source_dict[despesas_index_count:]:
                 item["id"] = "%s_%s" % (item["SQ_DESPESA"], item["DT_DESPESA"])
                 send_to_elastic(
                     item,
