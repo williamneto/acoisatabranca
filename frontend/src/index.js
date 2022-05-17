@@ -25,7 +25,7 @@ import "bootstrap/scss/bootstrap.scss";
 import "assets/scss/paper-kit.scss?v=1.3.0";
 import "assets/demo/demo.css?v=1.3.0";
 // pages
-import LandingPage from "views/examples/LandingPage.js";
+import IndexPage from "views/index.js";
 import AboutPage from "views/about";
 // others
 
@@ -34,7 +34,7 @@ ReactDOM.render(
     <Switch>
       
       <Route path="/sobre/" render={ (props) => <AboutPage {...props} /> } />
-      <Route path="/" render={(props) => <LandingPage {...props} />} />
+      <Route path="/" render={(props) => <IndexPage {...props} />} />
       
     </Switch>
   </BrowserRouter>,

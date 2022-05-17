@@ -16,70 +16,222 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-/*eslint-disable*/
-import React from "react";
+import React, { useEffect } from "react";
+import axios from "axios";
+import { useState } from "react";
+import Select from 'react-select'
 
 // reactstrap components
-import { Container } from "reactstrap";
+import { Button, Container, FormGroup, Row, Col } from "reactstrap";
 
 // core components
+const API = "http://acoisatabranca.com.br:8000"
+//const API = "http://localhost:8000"
 
-function IndexHeader() {
+const LandingPageHeader = ( props ) => {
+  const [ufPesquisa, setUfPesquisa] = useState()
+  const [cidadePesquisa, setCidadePesquisa] = useState();
+  const [partidoPesquisa, setPartidoPesquisa] = useState();
+
+  const [ufsOptions, setUfsOptions] = useState([])
+  const [cidadesOptions, setCidadesOptions] = useState([])
+  const [partidosOptions, setPartidosOptions] = useState([])
+
+  let pageHeader = React.createRef();
+
+  React.useEffect(() => {
+    if (window.innerWidth < 991) {
+      const updateScroll = () => {
+        let windowScrollTop = window.pageYOffset / 3;
+        pageHeader.current.style.transform =
+          "translate3d(0," + windowScrollTop + "px,0)";
+      };
+      window.addEventListener("scroll", updateScroll);
+      return function cleanup() {
+        window.removeEventListener("scroll", updateScroll);
+      };
+    }
+  });
+
+  const pesquisa = () => {
+    
+    if (cidadePesquisa) {
+      let url
+      if (partidoPesquisa) {
+        url = `${API}/cidade/?cidade=${cidadePesquisa}&partido=${partidoPesquisa}`
+      } else {
+        url = `${API}/cidade/?cidade=${cidadePesquisa}`
+      }
+      axios.get(url).then( response => {
+        if (response.data.total_cands > 0){
+          props.setSearchFail(false)
+          props.setData(
+            {
+              "cidade": cidadePesquisa,
+              "partido": partidoPesquisa,
+              "data": response.data
+            }
+          )
+        } else {
+          props.setSearchFail(true)
+        }
+
+        window.scrollTo(0, document.body.scrollHeight)
+      })
+    } else {
+      alert("Digite uma cidade para pesquisa")
+    }
+  }
+
+  const getUfsOptions = () => {
+    axios.get(`${API}/estados/`).then( response => {
+      let ufsOptions = []
+      for ( let uf of response.data) {
+        ufsOptions.push(
+          {
+            "value": uf,
+            "label": uf
+          }
+        )
+      }
+
+      setUfsOptions(ufsOptions)
+    })
+  }
+
+  const getCidadesOptions = (uf) => {
+    axios.get(`${API}/cidades/?uf=${uf}`).then( response => {
+      let cidadesOptions = []
+      for ( let cidade of response.data) {
+        cidadesOptions.push(
+          {
+            "value": cidade.NM_UE,
+            "label": cidade.NM_UE
+          }
+        )
+      }
+
+      setCidadesOptions(cidadesOptions)
+    })
+  }
+
+  const getPartidosOptions = () => {
+    axios.get(`${API}/partidos/`).then( response => {
+      let partidosOptions = []
+      for ( let partido of response.data) {
+        partidosOptions.push(
+          {
+            "value": partido.SG_PARTIDO,
+            "label": partido.SG_PARTIDO
+          }
+        )
+      }
+
+      setPartidosOptions(partidosOptions)
+    })
+  }
+
+  const handleUfChange = uf => {
+    console.log(uf)
+    console.log(ufsOptions)
+    if ( ufsOptions.includes(uf) ) {
+      setUfPesquisa(uf.value)
+      getCidadesOptions(uf.value)
+    }
+  }
+
+  useEffect( () => {
+    getUfsOptions()
+  }, [])
+
+  useEffect( () => {
+    getPartidosOptions()
+  }, [])
+
+  const colourStyles = {
+    control: styles => ({ ...styles, backgroundColor: 'white' }),
+    option: (styles, { data, isDisabled, isFocused, isSelected }) => {
+      const color = "black";
+      return {
+        ...styles,
+        color: color,
+        cursor: isDisabled ? 'not-allowed' : 'default',
+      };
+    },
+  };
   return (
     <>
       <div
-        className="page-header section-dark"
         style={{
           backgroundImage:
-            "url(" + require("assets/img/antoine-barres.jpg").default + ")",
+            "url(" + require("assets/img/mnu.png") + ")",
         }}
+        className="page-header"
+        data-parallax={true}
+        ref={pageHeader}
       >
         <div className="filter" />
-        <div className="content-center">
-          <Container>
-            <div className="title-brand">
-              <h1 className="presentation-title">Paper Kit React</h1>
-              <div className="fog-low">
-                <img
-                  alt="..."
-                  src={require("assets/img/fog-low.png").default}
-                />
-              </div>
-              <div className="fog-low right">
-                <img
-                  alt="..."
-                  src={require("assets/img/fog-low.png").default}
-                />
-              </div>
-            </div>
-            <h2 className="presentation-subtitle text-center">
-              Make your mark with a Free Bootstrap 4 (Reactstrap) UI Kit!
-            </h2>
-          </Container>
-        </div>
-        <div
-          className="moving-clouds"
-          style={{
-            backgroundImage:
-              "url(" + require("assets/img/clouds.png").default + ")",
-          }}
-        />
-        <h6 className="category category-absolute">
-          Designed and coded by{" "}
-          <a
-            href="https://www.creative-tim.com?ref=pkr-index-page"
-            target="_blank"
-          >
-            <img
-              alt="..."
-              className="creative-tim-logo"
-              src={require("assets/img/creative-tim-white-slim2.png").default}
-            />
-          </a>
-        </h6>
+        <Container>
+          <div className="motto text-center">
+            <h1>A Coisa Tá Branca</h1>
+            <h3>Monitor da representatividade negra na política</h3>
+            <br />
+
+            <Row>
+              <Col>
+                <FormGroup>
+                  <Select 
+                    options={ufsOptions} 
+                    placeholder="UF"
+                    onChange={ e => handleUfChange(e)}
+                    defaultValue={ufPesquisa}
+                    styles={colourStyles}
+                  />
+                  
+                </FormGroup>
+              </Col>
+              
+              <Col>
+            <FormGroup>
+              <Select 
+                options={cidadesOptions} 
+                placeholder="Cidade"
+                onChange={ e => setCidadePesquisa(e.value)}
+                defaultValue={cidadePesquisa}
+                styles={colourStyles}
+              />
+                </FormGroup>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col>
+                <FormGroup>
+              <Select 
+                options={partidosOptions} 
+                placeholder="Partido (opcional)"
+                onChange={ e => setPartidoPesquisa(e.value)}
+                defaultValue={partidoPesquisa}
+                styles={colourStyles}
+              />
+            </FormGroup>
+              </Col>
+            </Row>
+
+            <Button 
+              className="btn-round" 
+              color="neutral" 
+              type="button" 
+              onClick={ () => pesquisa()}
+              outline
+            >
+              Pesquisar
+            </Button>
+          </div>
+        </Container>
       </div>
     </>
   );
 }
 
-export default IndexHeader;
+export default LandingPageHeader;
