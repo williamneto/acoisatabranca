@@ -26,6 +26,7 @@ import {
 } from "reactstrap";
 
 // core components
+import IndexNavbar from "components/Navbars/IndexNavbar.js";
 import LandingPageHeader from "components/Headers/LandingPageHeader.js";
 import DemoFooter from "components/Footers/DemoFooter.js";
 import { useState } from "react";
@@ -49,7 +50,7 @@ const LandingPage = ( props ) => {
 
   return (
     <>
-      
+      <IndexNavbar />
       <LandingPageHeader setData={setData} mainContent={mainContent} setSearchFail={setSearchFail}/>
       <div className="main" ref={mainContent}>
         <div className="section text-center">

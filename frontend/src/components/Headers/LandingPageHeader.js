@@ -25,7 +25,7 @@ import Select from 'react-select'
 import { Button, Container, FormGroup, Row, Col } from "reactstrap";
 
 // core components
-const API = process.env.REACT_APP_API
+const API = "http://acoisatabranca.com.br:8000"
 //const API = "http://localhost:8000"
 
 const LandingPageHeader = ( props ) => {

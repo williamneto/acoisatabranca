@@ -30,6 +30,7 @@ import {
   Nav,
   Container,
 } from "reactstrap";
+import { Link } from "react-router-dom";
 
 function IndexNavbar() {
   const [navbarColor, setNavbarColor] = React.useState("navbar-transparent");
@@ -65,14 +66,16 @@ function IndexNavbar() {
     <Navbar className={classnames("fixed-top", navbarColor)} expand="lg">
       <Container>
         <div className="navbar-translate">
-          <NavbarBrand
-            data-placement="bottom"
-            href="/index"
-            target="_blank"
-            title="Coded by Creative Tim"
-          >
-            Paper Kit React
-          </NavbarBrand>
+          <Link to="/">
+            <NavbarBrand
+              data-placement="bottom"
+              // href="/index"
+              target="_blank"
+              title="Coded by Creative Tim"
+            >
+              A Coisa Tá Branca
+            </NavbarBrand>
+          </Link>
           <button
             aria-expanded={navbarCollapse}
             className={classnames("navbar-toggler navbar-toggler", {
@@ -91,7 +94,7 @@ function IndexNavbar() {
           isOpen={navbarCollapse}
         >
           <Nav navbar>
-            <NavItem>
+            {/* <NavItem>
               <NavLink
                 data-placement="bottom"
                 href="https://twitter.com/CreativeTim?ref=creativetim"
@@ -142,16 +145,18 @@ function IndexNavbar() {
               >
                 <i className="nc-icon nc-book-bookmark" /> Documentation
               </NavLink>
-            </NavItem>
+            </NavItem> */}
             <NavItem>
+              <Link to="/sobre">
               <Button
                 className="btn-round"
-                color="danger"
-                href="https://www.creative-tim.com/product/paper-kit-pro-react?ref=pkr-index-navbar"
+                color="secondary"
+                href="/sobre"
                 target="_blank"
               >
-                <i className="nc-icon nc-spaceship"></i> Upgrade to Pro
+                Sobre
               </Button>
+              </Link>
             </NavItem>
           </Nav>
         </Collapse>
